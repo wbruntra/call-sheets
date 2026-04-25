@@ -3,7 +3,7 @@ import { useState } from 'react';
 export default function AppBar({
   store, currentDay, tab, setTab, editing, setEditing, isMobile,
   switchDay, newDay, deleteDay,
-  onImportCSV, onImportJSON, onExportCSV,
+  onImportJSON,
   onResetAll, onOpenTweaks, onOpenShare
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -69,9 +69,7 @@ export default function AppBar({
               </button>
               <button onClick={() => { deleteDay(); setMenuOpen(false); }}>Delete Day</button>
               <button onClick={() => { onImportJSON(); setMenuOpen(false); }}>Import</button>
-              <button onClick={() => { if (onImportCSV) onImportCSV(); setMenuOpen(false); }}>Import CSV</button>
               <button onClick={() => { onOpenShare(); setMenuOpen(false); }}>Share</button>
-              <button onClick={() => { if (onExportCSV) onExportCSV(); setMenuOpen(false); }}>Export CSV</button>
               <button onClick={() => { onOpenTweaks(); setMenuOpen(false); }}>Tweaks</button>
               <button onClick={() => { if (confirm('Wipe ALL days and start fresh? (Cannot undo.)')) { onResetAll(); setMenuOpen(false); } }}>Reset All</button>
             </div>
@@ -82,9 +80,7 @@ export default function AppBar({
           <button onClick={() => setEditing(!editing)}>{editing ? 'Done' : 'Edit'}</button>
           <button onClick={deleteDay}>Delete Day</button>
           {onImportJSON ? <button onClick={onImportJSON}>Import</button> : null}
-          {onImportCSV ? <button onClick={onImportCSV}>Import CSV</button> : null}
           <button onClick={onOpenShare}>Share</button>
-          {onExportCSV ? <button onClick={onExportCSV}>Export CSV</button> : null}
           <button onClick={onOpenTweaks}>Tweaks</button>
           <button onClick={() => { if (confirm('Wipe ALL days and start fresh? (Cannot undo.)')) onResetAll(); }}>Reset All</button>
           <button className="primary" onClick={() => window.print()}>Print / PDF</button>

@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useCallSheet } from './hooks/useCallSheet';
 import { useDialog } from './hooks/useDialog';
 import { decompressDayFromURL, dayFromJSON, storeFromJSON, isEncryptedJSON, decryptDayFromJSON } from './share';
+import { getCloudBin, setCloudBin, clearCloudBin, fetchBin } from './jsonbin';
 import { useIsMobile, EditModeContext } from './components/EditModeContext';
 import AppBar from './components/AppBar';
 import Sheet from './components/Sheet';
@@ -17,6 +18,8 @@ export default function App() {
   const [tweaksOpen, setTweaksOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [cloudBin, setCloudBin] = useState(() => getCloudBin());
+  const [syncStatus, setSyncStatus] = useState(null); // null | 'loading' | 'ok' | 'error'
   const isMobile = useIsMobile();
 
   const {
@@ -37,6 +40,31 @@ export default function App() {
     document.body.classList.toggle('hide-logo', !store.tweaks.showLogo);
     document.body.classList.toggle('tweaks-open', tweaksOpen);
   }, [store.tweaks.showJP, store.tweaks.showLogo, tweaksOpen]);
+
+  // Auto-refresh from cloud bin on load
+  useEffect(() => {
+    if (!cloudBin) return;
+    setSyncStatus('loading');
+    fetchBin(cloudBin.binId)
+      .then(json => decryptDayFromJSON(json, cloudBin.password))
+      .then(day => {
+        updateStore(s => {
+          s.days = [day];
+          s.currentDayId = day.id;
+        });
+        setSyncStatus('ok');
+      })
+      .catch(err => {
+        console.warn('Auto-refresh failed:', err);
+        setSyncStatus('error');
+      });
+  }, []);
+
+  const handleUnfollow = useCallback(() => {
+    clearCloudBin();
+    setCloudBin(null);
+    setSyncStatus(null);
+  }, []);
 
   // Load shared data from URL hash on mount
   useEffect(() => {
@@ -253,6 +281,16 @@ export default function App() {
 
   return (
     <EditModeContext.Provider value={{ editing: effectiveEditing, isMobile }}>
+      {cloudBin && (
+        <div className={`sync-banner sync-banner--${syncStatus || 'loading'}`}>
+          {syncStatus === 'loading' && 'Fetching latest call sheet…'}
+          {syncStatus === 'ok' && `Synced from cloud · ${cloudBin.binId.slice(0, 8)}…`}
+          {syncStatus === 'error' && 'Could not reach cloud — showing last cached version'}
+          <button className="sync-banner-unfollow" onClick={handleUnfollow} title="Stop following">
+            Unfollow ×
+          </button>
+        </div>
+      )}
       <AppBar
         store={store}
         currentDay={currentDay}
@@ -264,9 +302,9 @@ export default function App() {
         switchDay={switchDay}
         newDay={newDay}
         deleteDay={deleteDay}
-        onImportCSV={handleImportCSV}
+
         onImportJSON={() => setImportOpen(true)}
-        onExportCSV={handleExportCSV}
+
         onResetAll={resetAll}
         onOpenTweaks={() => setTweaksOpen(true)}
         onOpenShare={() => setShareOpen(true)}
@@ -293,6 +331,8 @@ export default function App() {
         onClose={() => setTweaksOpen(false)}
         tweaks={store.tweaks}
         setTweak={setTweak}
+        followedBin={cloudBin}
+        onUnfollow={handleUnfollow}
       />
 
       {shareOpen && (
@@ -307,6 +347,7 @@ export default function App() {
         <ImportDialog
           onImport={processImportText}
           onFile={handleImportJSONFile}
+          onFollow={(binId, password) => { setCloudBin({ binId, password }); setSyncStatus('ok'); }}
           onClose={() => setImportOpen(false)}
         />
       )}

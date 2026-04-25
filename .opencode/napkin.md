@@ -3,6 +3,8 @@
 ## Corrections
 | Date | Source | What Went Wrong | What To Do Instead |
 |------|--------|----------------|-------------------|
+| 2026-04-25 | self | JSONHosting has no CORS headers — unusable from browser | Switched to jsonbin.io API (requires VITE_JSONBIN_KEY in .env) |
+| 2026-04-25 | self | Merged "owned bin" + "followed bin" into single "cloud bin" concept | One localStorage key `callsheets_cloud` stores { binId, password }; auto-syncs on reload |
 | 2026-04-24 | self | Used `React.Fragment` in KVSection without importing React | Use `{ Fragment }` import from 'react' instead |
 | 2026-04-24 | self | Had stray `</div>` in Section.jsx from removing fragment wrapper | Verify JSX nesting when removing wrapper elements |
 | 2026-04-24 | self | useCallSheet imported DEFAULT_DAY_DATA/BLANK_DAY_DATA from utils.js but they're in data/defaults.js | Fix import path to `../data/defaults` |

@@ -12,6 +12,7 @@ export default function Field({
   ...rest
 }) {
   const ref = useRef(null);
+  const lastCommitted = useRef(value);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -20,6 +21,18 @@ export default function Field({
     el.style.height = 'auto';
     el.style.height = el.scrollHeight + 'px';
   }, [multiline, value]);
+
+  // Sync contentEditable when value changes from outside (e.g. undo/external update)
+  useEffect(() => {
+    if (multiline || !ref.current) return;
+    const el = ref.current;
+    if (document.activeElement === el) return; // don't disrupt user while typing
+    const current = html ? el.innerHTML : el.textContent;
+    if (current !== (value ?? '')) {
+      if (html) el.innerHTML = value ?? '';
+      else el.textContent = value ?? '';
+    }
+  }, [value, html, multiline]);
 
   if (html) {
     return (
@@ -30,11 +43,10 @@ export default function Field({
         onBlur={() => {
           if (!ref.current) return;
           const next = ref.current.innerHTML;
-          if (next !== value) onChange(next);
-        }}
-        onInput={() => {
-          if (!ref.current) return;
-          onChange(ref.current.innerHTML);
+          if (next !== lastCommitted.current) {
+            lastCommitted.current = next;
+            onChange(next);
+          }
         }}
         data-placeholder={placeholder}
         className={`field${className ? ' ' + className : ''}`}
@@ -84,11 +96,10 @@ export default function Field({
       onBlur={() => {
         if (!ref.current) return;
         const next = ref.current.textContent;
-        if (next !== value) onChange(next);
-      }}
-      onInput={() => {
-        if (!ref.current) return;
-        onChange(ref.current.textContent);
+        if (next !== lastCommitted.current) {
+          lastCommitted.current = next;
+          onChange(next);
+        }
       }}
       data-placeholder={placeholder}
       className={`field${className ? ' ' + className : ''}`}
