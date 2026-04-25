@@ -541,7 +541,7 @@
   .sync-banner {
     display: flex; align-items: center; justify-content: center; gap: 12px;
     padding: 7px 16px; font-size: 11px; font-weight: 500;
-    position: sticky; top: 0; z-index: 55;
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 55;
   }
   .sync-banner--loading { background: #f0f4ff; color: #3a5ccc; }
   .sync-banner--ok { background: #f0faf0; color: #2e6e2e; }
@@ -552,6 +552,22 @@
     padding: 2px 7px; cursor: pointer; opacity: 0.7; color: inherit;
   }
   .sync-banner-unfollow:hover { opacity: 1; }
+
+  /* ──────────────── CLOUD LOADING OVERLAY ──────────────── */
+  .cloud-loading-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.85); z-index: 999;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 14px; color: #555;
+  }
+  .cloud-loading-overlay p { margin-top: 16px; }
+  .cloud-loading-spinner {
+    width: 32px; height: 32px;
+    border: 3px solid #ddd; border-top-color: #3a5ccc;
+    border-radius: 50%;
+    animation: cloud-spin 0.8s linear infinite;
+  }
+  @keyframes cloud-spin { to { transform: rotate(360deg); } }
 
   /* ──────────────── INTAKE TAB ──────────────── */
   .intake {

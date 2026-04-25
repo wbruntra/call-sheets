@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useCallSheet } from './hooks/useCallSheet';
 import { useDialog } from './hooks/useDialog';
 import { decompressDayFromURL, dayFromJSON, storeFromJSON, isEncryptedJSON, decryptDayFromJSON } from './share';
-import { getCloudBin, setCloudBin, clearCloudBin, fetchBin } from './jsonbin';
+import { getCloudBin, setCloudBin as saveCloudBin, clearCloudBin, fetchBin } from './jsonbin';
 import { useIsMobile, EditModeContext } from './components/EditModeContext';
 import AppBar from './components/AppBar';
 import Sheet from './components/Sheet';
@@ -20,6 +20,7 @@ export default function App() {
   const [importOpen, setImportOpen] = useState(false);
   const [cloudBin, setCloudBin] = useState(() => getCloudBin());
   const [syncStatus, setSyncStatus] = useState(null); // null | 'loading' | 'ok' | 'error'
+  const [cloudInitialLoad, setCloudInitialLoad] = useState(false);
   const isMobile = useIsMobile();
 
   const {
@@ -66,35 +67,48 @@ export default function App() {
     setSyncStatus(null);
   }, []);
 
+  const handleResetAll = useCallback(() => {
+    clearCloudBin();
+    setCloudBin(null);
+    setSyncStatus(null);
+    resetAll();
+  }, [resetAll]);
+
   // Load shared data from URL hash on mount
   useEffect(() => {
     const hash = window.location.hash;
     // Cloud link: #/c/<binId> — fetch from jsonbin, prompt for password if encrypted
     if (hash.startsWith('#/c/')) {
-      const binId = hash.slice(3).trim();
+      const binId = hash.slice(4).trim();
       if (!binId) return;
+      setCloudInitialLoad(true);
       setSyncStatus('loading');
       fetchBin(binId)
         .then(json => {
           const obj = JSON.parse(json);
           if (isEncryptedJSON(obj)) {
+            setCloudInitialLoad(false);
             setSyncStatus(null);
             showPasswordPrompt({
               title: 'Cloud call sheet',
               message: 'This call sheet is password-protected. Enter the password to open it.',
             }).then(password => {
               if (!password) { window.history.replaceState(null, '', window.location.pathname); return; }
+              setCloudInitialLoad(true);
               setSyncStatus('loading');
               decryptDayFromJSON(json, password)
                 .then(day => {
                   updateStore(s => { s.days = [day]; s.currentDayId = day.id; });
-                  setCloudBin(binId, password);
+                  saveCloudBin(binId, password);
+                  setCloudBin({ binId, password });
                   setSyncStatus('ok');
+                  setCloudInitialLoad(false);
                   window.history.replaceState(null, '', window.location.pathname);
                 })
                 .catch(() => {
                   showAlert({ title: 'Decryption failed', message: 'Wrong password or corrupted data.' });
                   setSyncStatus('error');
+                  setCloudInitialLoad(false);
                   window.history.replaceState(null, '', window.location.pathname);
                 });
             });
@@ -105,17 +119,21 @@ export default function App() {
           if (!day) {
             showAlert({ title: 'Import failed', message: 'Could not parse the cloud data.' });
             setSyncStatus('error');
+            setCloudInitialLoad(false);
             return;
           }
           updateStore(s => { s.days = [day]; s.currentDayId = day.id; });
-          setCloudBin(binId, '');
+          saveCloudBin(binId, '');
+          setCloudBin({ binId, password: '' });
           setSyncStatus('ok');
+          setCloudInitialLoad(false);
           window.history.replaceState(null, '', window.location.pathname);
         })
         .catch(err => {
           console.warn('Cloud link fetch failed:', err);
           showAlert({ title: 'Import failed', message: err.message || 'Could not fetch cloud data.' });
           setSyncStatus('error');
+          setCloudInitialLoad(false);
           window.history.replaceState(null, '', window.location.pathname);
         });
       return;
@@ -333,6 +351,12 @@ export default function App() {
 
   return (
     <EditModeContext.Provider value={{ editing: effectiveEditing, isMobile }}>
+      {cloudInitialLoad && (
+        <div className="cloud-loading-overlay">
+          <div className="cloud-loading-spinner" />
+          <p>Loading call sheet from cloud…</p>
+        </div>
+      )}
       {cloudBin && (
         <div className={`sync-banner sync-banner--${syncStatus || 'loading'}`}>
           {syncStatus === 'loading' && 'Fetching latest call sheet…'}
@@ -357,7 +381,7 @@ export default function App() {
 
         onImportJSON={() => setImportOpen(true)}
 
-        onResetAll={resetAll}
+        onResetAll={handleResetAll}
         onOpenTweaks={() => setTweaksOpen(true)}
         onOpenShare={() => setShareOpen(true)}
       />
