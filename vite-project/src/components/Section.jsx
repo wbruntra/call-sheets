@@ -7,7 +7,7 @@ import KVSection from './KVSection';
 import NotesSection from './NotesSection';
 
 export default function Section({ sec, idx, updateDay, pageBreaks }) {
-  const editing = useEditMode();
+  const { editing } = useEditMode();
 
   const updateSection = useCallback((updater) => {
     if (!updateDay) return;

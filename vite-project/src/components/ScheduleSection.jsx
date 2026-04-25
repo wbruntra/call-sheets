@@ -1,6 +1,9 @@
 import { useCallback } from 'react';
+import { useEditMode } from './EditModeContext';
 
 export default function ScheduleSection({ sec, updateSection, updateDay }) {
+  const { isMobile } = useEditMode();
+
   const handleFieldChange = useCallback((i, field, value) => {
     updateSection(s => { s.data[i][field] = value; });
   }, [updateSection]);
@@ -39,6 +42,40 @@ export default function ScheduleSection({ sec, updateSection, updateDay }) {
   }, [updateSection]);
 
   const hasBreak = (i) => (sec.pageBreaks || []).some(p => p.beforeRow && p.beforeRow.sectionId === sec.id && p.beforeRow.idx === i);
+
+  if (isMobile) {
+    return (
+      <div className="sched-mobile">
+        {sec.data.map((r, i) => {
+          if (r.type === 'span') {
+            return (
+              <div key={i} className="sched-card sched-card--span">
+                <div className="sched-card-head">
+                  {r.time && <span className="sched-time">{r.time}</span>}
+                  {r.dur && <span className="sched-dur">{r.dur}</span>}
+                </div>
+                <div className="sched-span-text">{r.text}</div>
+              </div>
+            );
+          }
+          const hasContent = r.task || r.loc || r.cast || r.note;
+          return (
+            <div key={i} className="sched-card">
+              <div className="sched-card-head">
+                {r.time && <span className="sched-time">{r.time}</span>}
+                {r.dur && <span className="sched-dur">{r.dur}</span>}
+              </div>
+              {r.task && <div className="sched-task">{r.task}</div>}
+              {r.loc && <div className="sched-detail"><span className="sched-label">Location</span> {r.loc}</div>}
+              {r.cast && <div className="sched-detail"><span className="sched-label">Cast</span> {r.cast}</div>}
+              {r.note && <div className="sched-detail"><span className="sched-label">Note</span> {r.note}</div>}
+              {!hasContent && <div className="sched-task sched-task--empty">—</div>}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     <>

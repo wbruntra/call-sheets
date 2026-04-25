@@ -15,7 +15,7 @@ const SECTION_TYPES = [
 ];
 
 export default function Sheet({ day, updateDay, store }) {
-  const editing = useEditMode();
+  const { editing } = useEditMode();
 
   const addSection = useCallback((type) => {
     const blank = { id: uid(), type, title: type[0].toUpperCase() + type.slice(1) };

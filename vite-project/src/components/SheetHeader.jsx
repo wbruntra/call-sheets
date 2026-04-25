@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useEditMode } from './EditModeContext';
 import Field from './Field';
 
 function LogoSlot({ logos, onUpdate }) {
@@ -70,7 +71,46 @@ function LogoSlot({ logos, onUpdate }) {
   );
 }
 
+function MobileHeader({ day }) {
+  return (
+    <div className="hd-mobile">
+      <div className="hd-mobile-hero">
+        <div className="hd-mobile-date">{day.meta.date || '—'}</div>
+        {day.meta.day && <div className="hd-mobile-day">Day {day.meta.day}</div>}
+        {day.meta.shootCall && <div className="hd-mobile-call">Shoot Call {day.meta.shootCall}</div>}
+      </div>
+      {day.meta.company && <div className="hd-mobile-company">{day.meta.company}</div>}
+      <div className="hd-mobile-details">
+        {day.meta.project && <div className="hd-mobile-row"><span className="hd-mobile-label">Project</span><span>{day.meta.project}</span></div>}
+        {day.meta.client && <div className="hd-mobile-row"><span className="hd-mobile-label">Client</span><span>{day.meta.client}</span></div>}
+        {day.meta.mainLocation && <div className="hd-mobile-row"><span className="hd-mobile-label">Location</span><span>{day.meta.mainLocation}</span></div>}
+      </div>
+      <div className="hd-mobile-crew">
+        {day.meta['crew.director'] && <span className="crew-chip">Dir: {day.meta['crew.director'].trim()}</span>}
+        {day.meta['crew.dop'] && <span className="crew-chip">DOP: {day.meta['crew.dop'].trim()}</span>}
+        {day.meta['crew.lp'] && <span className="crew-chip">Prod: {day.meta['crew.lp'].trim()}</span>}
+        {day.meta['crew.usprod'] && <span className="crew-chip">US: {day.meta['crew.usprod'].trim()}</span>}
+      </div>
+      {(day.meta.emergency || day.meta.weatherCallout) && (
+        <div className="hd-mobile-meta">
+          {day.meta.weatherCallout && <div className="hd-mobile-meta-item">{day.meta.weatherCallout}</div>}
+          {day.meta.emergency && <div className="hd-mobile-meta-item"><span className="hd-mobile-label">Emergency</span><span>{day.meta.emergency}</span></div>}
+          {(day.meta.sunrise || day.meta.sunset) && (
+            <div className="hd-mobile-meta-item">
+              {day.meta.sunrise && <span>☀ Rise {day.meta.sunrise}</span>}
+              {day.meta.sunrise && day.meta.sunset && ' · '}
+              {day.meta.sunset && <span>☾ Set {day.meta.sunset}</span>}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function SheetHeader({ day, updateDay }) {
+  const { isMobile } = useEditMode();
+
   const updateMeta = useCallback((key, value) => {
     updateDay(d => { d.meta[key] = value; });
   }, [updateDay]);
@@ -78,6 +118,15 @@ export default function SheetHeader({ day, updateDay }) {
   const updateLogos = useCallback((updater) => {
     updateDay(d => { d.logos = typeof updater === 'function' ? updater(d.logos) : updater; });
   }, [updateDay]);
+
+  if (isMobile) {
+    return (
+      <>
+        <LogoSlot logos={day.logos} onUpdate={updateLogos} />
+        <MobileHeader day={day} />
+      </>
+    );
+  }
 
   return (
     <>

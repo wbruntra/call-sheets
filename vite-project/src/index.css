@@ -723,6 +723,250 @@
   }
   .import-textarea:focus { border-color: var(--accent); }
 
+  /* ──────────────── MOBILE (screen only, does not affect print) ──────────────── */
+  @media screen and (max-width: 860px) {
+    /* AppBar */
+    .appbar {
+      padding: 6px 8px; gap: 5px;
+      justify-content: space-between;
+      flex-wrap: nowrap;
+    }
+    .appbar .brand { font-size: 13px; }
+    .appbar .brand .sub { display: none; }
+    .appbar .spacer { display: none; }
+    .appbar .tabs { flex-shrink: 0; }
+    .appbar .hamburger {
+      font-size: 18px; width: 34px; height: 34px; padding: 0;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .appbar-menu {
+      position: absolute; top: 100%; right: 8px;
+      background: var(--paper); border: 1px solid var(--rule);
+      border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,.14);
+      padding: 6px; display: flex; flex-direction: column; gap: 2px;
+      z-index: 50; min-width: 180px;
+    }
+    .appbar-menu button {
+      width: 100%; justify-content: flex-start;
+      padding: 8px 14px; border: none; background: transparent;
+      border-radius: 6px;
+    }
+    .appbar-menu button:hover { background: var(--rule-2); }
+
+    /* Day switcher: compact */
+    .day-btn { padding: 4px 7px; }
+    .day-btn-top { font-size: 10px; }
+    .day-btn-sub { display: none; }
+
+    /* Paper: full-width */
+    .page-wrap { padding: 8px 4px 40px; }
+    .paper {
+      width: 100%; max-width: 100%; min-height: auto;
+      padding: 16px 14px 24px; box-shadow: 0 1px 4px rgba(0,0,0,.06);
+      border-radius: 4px;
+    }
+
+    /* Hide desktop header layouts */
+    .hd, .hd2 { display: none !important; }
+
+    /* ── Mobile header ── */
+    .hd-mobile {
+      display: flex; flex-direction: column;
+    }
+    .hd-mobile-hero {
+      padding: 0 0 14px;
+      border-bottom: 1px solid var(--rule);
+      margin-bottom: 12px;
+    }
+    .hd-mobile-date {
+      font-size: 13px; font-weight: 700;
+      color: var(--ink); letter-spacing: 0.02em;
+    }
+    .hd-mobile-day {
+      font-size: 11px; color: var(--ink-3);
+      font-weight: 500; margin-top: 2px;
+    }
+    .hd-mobile-call {
+      font-family: var(--font-mono); font-size: 20px;
+      font-weight: 600; color: var(--accent);
+      margin-top: 4px;
+    }
+    .hd-mobile-company {
+      font-size: 14px; font-weight: 600; font-style: italic;
+      color: var(--ink); margin-bottom: 8px;
+    }
+    .hd-mobile-details {
+      display: flex; flex-direction: column; gap: 4px;
+      margin-bottom: 8px;
+    }
+    .hd-mobile-row {
+      display: flex; gap: 8px; font-size: 12px; line-height: 1.4;
+    }
+    .hd-mobile-label {
+      font-weight: 600; color: var(--ink-3); font-size: 10px;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      min-width: 64px; flex-shrink: 0;
+    }
+    .hd-mobile-crew {
+      display: flex; flex-wrap: wrap; gap: 4px;
+      margin-bottom: 8px;
+    }
+    .crew-chip {
+      font-size: 10px; font-weight: 500;
+      background: var(--rule-2); color: var(--ink-2);
+      padding: 3px 8px; border-radius: 20px;
+    }
+    .hd-mobile-meta {
+      font-size: 11px; color: var(--ink-2);
+      display: flex; flex-direction: column; gap: 4px;
+      padding-top: 8px; border-top: 1px solid var(--rule-2);
+    }
+    .hd-mobile-meta-item {
+      display: flex; gap: 6px; line-height: 1.4;
+    }
+
+    /* ── Mobile schedule (cards) ── */
+    .sched-mobile {
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .sched-card {
+      padding: 12px 14px;
+      border: 1px solid var(--rule-2);
+      border-left: 3px solid var(--rule);
+      border-radius: 6px;
+      background: var(--paper);
+    }
+    .sched-card--span {
+      border-left-color: var(--accent);
+      background: color-mix(in oklch, var(--accent) 4%, var(--paper));
+    }
+    .sched-card-head {
+      display: flex; align-items: baseline; gap: 8px;
+      margin-bottom: 6px;
+    }
+    .sched-time {
+      font-family: var(--font-mono); font-size: 14px;
+      font-weight: 700; color: var(--ink);
+    }
+    .sched-dur {
+      font-family: var(--font-mono); font-size: 11px;
+      color: var(--ink-3); font-weight: 400;
+    }
+    .sched-task {
+      font-size: 13px; font-weight: 600;
+      color: var(--ink); line-height: 1.4;
+    }
+    .sched-task--empty { color: var(--ink-4); font-weight: 400; }
+    .sched-span-text {
+      font-size: 12px; font-weight: 600;
+      color: var(--accent); letter-spacing: 0.04em;
+    }
+    .sched-detail {
+      font-size: 11px; color: var(--ink-2);
+      margin-top: 4px; line-height: 1.4;
+    }
+    .sched-label {
+      font-size: 9px; font-weight: 600;
+      color: var(--ink-4); text-transform: uppercase;
+      letter-spacing: 0.06em; margin-right: 6px;
+    }
+
+    /* ── Mobile contacts (cards) ── */
+    .contacts-mobile {
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .contact-card {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 14px; border: 1px solid var(--rule-2);
+      border-radius: 6px; background: var(--paper);
+    }
+    .contact-role {
+      font-size: 9px; font-weight: 600;
+      color: var(--ink-3); text-transform: uppercase;
+      letter-spacing: 0.06em; min-width: 60px; flex-shrink: 0;
+    }
+    .contact-name {
+      font-size: 13px; font-weight: 600; color: var(--ink);
+      flex: 1;
+    }
+    .contact-phone {
+      font-size: 10px; color: var(--accent);
+      text-decoration: none;
+    }
+
+    /* ── Mobile equipment ── */
+    .equip-mobile {
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .equip-card {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 14px; border-radius: 6px;
+      cursor: pointer; user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .equip-card:active { background: var(--rule-2); }
+    .equip-card.done .equip-text {
+      text-decoration: line-through; color: var(--ink-3);
+    }
+    .equip-check {
+      width: 22px; height: 22px; border: 1.5px solid var(--rule);
+      border-radius: 4px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; color: var(--accent);
+    }
+    .equip-check.checked {
+      background: var(--ink); border-color: var(--ink);
+      color: var(--paper);
+    }
+    .equip-text {
+      font-size: 12px; line-height: 1.4; color: var(--ink);
+    }
+
+    /* ── Mobile KV ── */
+    .kv-mobile { gap: 8px 10px; grid-template-columns: 1fr; }
+    .kv-mobile .k {
+      font-size: 9px; color: var(--ink-4); padding-bottom: 0;
+    }
+    .kv-mobile .v {
+      font-size: 12px; color: var(--ink); margin-bottom: 4px;
+    }
+
+    /* ── Mobile notes ── */
+    .notes-mobile {
+      font-size: 12px; line-height: 1.55; color: var(--ink-2);
+      white-space: pre-line;
+    }
+
+    /* ── Section spacing ── */
+    .section { margin-bottom: 16px; }
+    .section:last-child { margin-bottom: 0; }
+    .section-head { margin-bottom: 8px; }
+    .section-head .num { font-size: 11px; }
+
+    /* Editing: hide all editing UI on mobile */
+    .sec-ctrls, .row-controls, .add-row, .add-sec, .pbreak-slot,
+    .crew-ctrls, .logo-ctrls, .logo-add, .chk .row-ctrls { display: none !important; }
+    body.editing .sec-ctrls, body.editing .row-controls, body.editing .add-row,
+    body.editing .add-sec, body.editing .pbreak-slot, body.editing .crew-ctrls,
+    body.editing .logo-ctrls, body.editing .logo-add, body.editing .chk .row-ctrls { display: none !important; }
+
+    /* Modals: full-width from bottom */
+    .modal-overlay { align-items: flex-end; }
+    .modal { width: 100%; max-width: 100%; border-radius: 16px 16px 0 0; max-height: 85vh; }
+    .dialog-modal { width: calc(100% - 16px); }
+
+    /* Tweaks: bottom sheet */
+    .tweaks {
+      bottom: 0; right: 0; width: 100%; max-height: 50vh;
+      border-radius: 16px 16px 0 0 !important; padding: 18px 20px;
+      overflow-y: auto;
+    }
+
+    /* Intake textarea: smaller */
+    .intake textarea { min-height: 140px; font-size: 12px; }
+  }
+
   /* ──────────────── PRINT ──────────────── */
   @page { size: A4; margin: 0; }
   @media print {

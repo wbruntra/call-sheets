@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useCallSheet } from './hooks/useCallSheet';
 import { useDialog } from './hooks/useDialog';
 import { decompressDayFromURL, dayFromJSON, storeFromJSON, isEncryptedJSON, decryptDayFromJSON } from './share';
-import { EditModeContext } from './components/EditModeContext';
+import { useIsMobile, EditModeContext } from './components/EditModeContext';
 import AppBar from './components/AppBar';
 import Sheet from './components/Sheet';
 import Intake from './components/Intake';
@@ -17,17 +17,20 @@ export default function App() {
   const [tweaksOpen, setTweaksOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const {
     store, currentDay, updateDay, updateStore,
     switchDay, newDay, deleteDay, setTweak, resetAll
   } = useCallSheet();
 
+  const effectiveEditing = isMobile ? false : editing;
+
   const { dialog, showAlert, showConfirm, showPasswordPrompt, closeDialog } = useDialog();
 
   useEffect(() => {
-    document.body.classList.toggle('editing', editing);
-  }, [editing]);
+    document.body.classList.toggle('editing', effectiveEditing);
+  }, [effectiveEditing]);
 
   useEffect(() => {
     document.body.classList.toggle('hide-jp', !store.tweaks.showJP);
@@ -249,7 +252,7 @@ export default function App() {
   }, [store.days, currentDay, showConfirm]);
 
   return (
-    <EditModeContext.Provider value={editing}>
+    <EditModeContext.Provider value={{ editing: effectiveEditing, isMobile }}>
       <AppBar
         store={store}
         currentDay={currentDay}
@@ -257,6 +260,7 @@ export default function App() {
         setTab={setTab}
         editing={editing}
         setEditing={setEditing}
+        isMobile={isMobile}
         switchDay={switchDay}
         newDay={newDay}
         deleteDay={deleteDay}

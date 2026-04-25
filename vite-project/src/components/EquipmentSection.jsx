@@ -1,6 +1,9 @@
 import { useCallback } from 'react';
+import { useEditMode } from './EditModeContext';
 
 export default function EquipmentSection({ sec, updateSection }) {
+  const { isMobile } = useEditMode();
+
   const handleTextChange = useCallback((i, text) => {
     updateSection(s => { s.data[i].text = text; });
   }, [updateSection]);
@@ -29,6 +32,25 @@ export default function EquipmentSection({ sec, updateSection }) {
   const handleAdd = useCallback(() => {
     updateSection(s => { s.data.push({ text: '', done: false }); });
   }, [updateSection]);
+
+  if (isMobile) {
+    return (
+      <div className="equip-mobile">
+        {sec.data.map((item, i) => (
+          <div
+            key={i}
+            className={`equip-card${item.done ? ' done' : ''}`}
+            onClick={() => handleToggle(i)}
+          >
+            <span className={`equip-check${item.done ? ' checked' : ''}`}>
+              {item.done && '✓'}
+            </span>
+            <span className="equip-text">{item.text}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <>

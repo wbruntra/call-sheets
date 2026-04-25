@@ -1,6 +1,15 @@
+import { useEditMode } from './EditModeContext';
 import Field from './Field';
 
 export default function NotesSection({ sec, updateSection }) {
+  const { isMobile } = useEditMode();
+
+  if (isMobile) {
+    return (
+      <div className="notes-mobile">{sec.data.text || ''}</div>
+    );
+  }
+
   return (
     <Field
       multiline
