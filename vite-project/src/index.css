@@ -700,6 +700,19 @@
   .share-enc-msg { font-size: 11px; margin: 0 0 8px; }
   .share-enc-msg.error { color: #c0392b; }
   .share-enc-msg.ok { color: #4a7c4a; }
+  .dialog-modal { width: 400px; }
+  .dialog-message { font-size: 13px; color: var(--ink); margin: 0 0 16px; line-height: 1.55; white-space: pre-line; }
+  .dialog-actions { display: flex; flex-direction: column; gap: 8px; }
+  .dialog-actions--row { flex-direction: row; justify-content: flex-end; }
+  .dialog-actions button {
+    padding: 9px 18px; border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--paper); cursor: pointer; font-size: 12px; font-weight: 500;
+    color: var(--ink); font-family: inherit;
+  }
+  .dialog-actions button:hover { border-color: var(--accent); color: var(--accent); }
+  .dialog-actions button.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .dialog-actions button.primary:hover { background: var(--accent-ink); border-color: var(--accent-ink); color: var(--paper); }
+  .dialog-actions button:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
   .import-textarea-wrap { display: flex; }
   .import-textarea {
     width: 100%; min-height: 160px; resize: vertical;

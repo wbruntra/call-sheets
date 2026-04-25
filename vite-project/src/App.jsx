@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useCallSheet } from './hooks/useCallSheet';
+import { useDialog } from './hooks/useDialog';
 import { decompressDayFromURL, dayFromJSON, storeFromJSON, isEncryptedJSON, decryptDayFromJSON } from './share';
 import { EditModeContext } from './components/EditModeContext';
 import AppBar from './components/AppBar';
@@ -8,6 +9,7 @@ import Intake from './components/Intake';
 import TweaksPanel from './components/TweaksPanel';
 import ShareDialog from './components/ShareDialog';
 import ImportDialog from './components/ImportDialog';
+import Dialog from './components/Dialog';
 
 export default function App() {
   const [tab, setTab] = useState('sheet');
@@ -20,6 +22,8 @@ export default function App() {
     store, currentDay, updateDay, updateStore,
     switchDay, newDay, deleteDay, setTweak, resetAll
   } = useCallSheet();
+
+  const { dialog, showAlert, showConfirm, showPasswordPrompt, closeDialog } = useDialog();
 
   useEffect(() => {
     document.body.classList.toggle('editing', editing);
@@ -38,24 +42,31 @@ export default function App() {
     const compressed = hash.slice(4);
     if (!compressed) return;
     const day = decompressDayFromURL(compressed);
-    if (!day) { alert('Could not load shared call sheet data.'); return; }
-    const action = confirm(
-      'You opened a shared call sheet.\n\nOK = Replace current day with shared data\nCancel = Add as a new day'
-    );
-    if (action) {
-      updateDay(d => {
-        Object.assign(d.meta, day.meta);
-        d.logos = day.logos;
-        d.sections = day.sections;
-        d.pageBreaks = day.pageBreaks;
-      });
-    } else {
-      updateStore(s => {
-        s.days.push(day);
-        s.currentDayId = day.id;
-      });
+    if (!day) {
+      showAlert({ title: 'Import failed', message: 'Could not load shared call sheet data.' });
+      return;
     }
-    window.history.replaceState(null, '', window.location.pathname);
+    showConfirm({
+      title: 'Shared call sheet',
+      message: 'You opened a shared call sheet. Would you like to replace your current day or add it as a new day?',
+      confirmLabel: 'Replace current day',
+      cancelLabel: 'Add as new day',
+    }).then(replace => {
+      if (replace) {
+        updateDay(d => {
+          Object.assign(d.meta, day.meta);
+          d.logos = day.logos;
+          d.sections = day.sections;
+          d.pageBreaks = day.pageBreaks;
+        });
+      } else {
+        updateStore(s => {
+          s.days.push(day);
+          s.currentDayId = day.id;
+        });
+      }
+      window.history.replaceState(null, '', window.location.pathname);
+    });
   }, []);
 
   const handleImportCSV = useCallback(() => {
@@ -65,10 +76,13 @@ export default function App() {
       const f = inp.files[0]; if (!f) return;
       const fr = new FileReader();
       fr.onload = () => {
-        import('./utils.js').then(({ parseCSVtoDrafts, uid }) => {
+        import('./utils.js').then(async ({ parseCSVtoDrafts, uid }) => {
           try {
             const drafts = parseCSVtoDrafts(fr.result);
-            if (drafts.length === 0) { alert('No content found in CSV.'); return; }
+            if (drafts.length === 0) {
+              showAlert({ title: 'Empty file', message: 'No content found in CSV.' });
+              return;
+            }
             if (drafts.length === 1) {
               const d = drafts[0];
               updateDay(day => {
@@ -79,25 +93,30 @@ export default function App() {
               });
               return;
             }
-            const action = confirm(
-              `This CSV contains ${drafts.length} days.\n\nOK = Replace all days\nCancel = Append as new days`
-            );
+            const replace = await showConfirm({
+              title: 'Multiple days',
+              message: `This CSV contains ${drafts.length} days. Replace all current days, or append them?`,
+              confirmLabel: 'Replace all',
+              cancelLabel: 'Append',
+            });
             const fresh = drafts.map(d => ({
               id: uid(), meta: d.meta || {}, logos: [], pageBreaks: [],
               sections: (d.sections || []).map(s => ({ ...s, id: uid() }))
             }));
-            if (action) {
+            if (replace) {
               updateStore(s => { s.days = fresh; s.currentDayId = fresh[0].id; });
             } else {
               updateStore(s => { s.days.push(...fresh); s.currentDayId = fresh[0].id; });
             }
-          } catch (e) { alert('CSV parse error: ' + e.message); }
+          } catch (e) {
+            showAlert({ title: 'CSV error', message: 'CSV parse error: ' + e.message });
+          }
         });
       };
       fr.readAsText(f);
     };
     inp.click();
-  }, [updateDay, updateStore]);
+  }, [updateDay, updateStore, showAlert, showConfirm]);
 
   // Shared import logic used by both the ImportDialog (paste) and the file picker
   const processImportText = useCallback(async (text, password) => {
@@ -107,8 +126,13 @@ export default function App() {
       if (isEncryptedJSON(obj)) {
         if (!password) throw new Error('Password required for encrypted file.');
         const day = await decryptDayFromJSON(text, password);
-        const action = confirm('Import encrypted call sheet.\n\nOK = Replace current day\nCancel = Add as new day');
-        if (action) {
+        const replace = await showConfirm({
+          title: 'Import encrypted call sheet',
+          message: 'Replace your current day with the imported data, or add it as a new day?',
+          confirmLabel: 'Replace current day',
+          cancelLabel: 'Add as new day',
+        });
+        if (replace) {
           updateDay(d => { Object.assign(d.meta, day.meta); d.logos = day.logos; d.sections = day.sections; d.pageBreaks = day.pageBreaks; });
         } else {
           updateStore(s => { s.days.push(day); s.currentDayId = day.id; });
@@ -124,8 +148,13 @@ export default function App() {
     // Plain single day
     const day = dayFromJSON(text);
     if (day) {
-      const action = confirm('Import call sheet.\n\nOK = Replace current day\nCancel = Add as new day');
-      if (action) {
+      const replace = await showConfirm({
+        title: 'Import call sheet',
+        message: 'Replace your current day with the imported data, or add it as a new day?',
+        confirmLabel: 'Replace current day',
+        cancelLabel: 'Add as new day',
+      });
+      if (replace) {
         updateDay(d => { Object.assign(d.meta, day.meta); d.logos = day.logos; d.sections = day.sections; d.pageBreaks = day.pageBreaks; });
       } else {
         updateStore(s => { s.days.push(day); s.currentDayId = day.id; });
@@ -137,8 +166,13 @@ export default function App() {
     // Multi-day store
     const imported = storeFromJSON(text);
     if (imported) {
-      const action = confirm(`Import ${imported.days.length} call sheet(s).\n\nOK = Replace all days\nCancel = Append as new days`);
-      if (action) {
+      const replace = await showConfirm({
+        title: `Import ${imported.days.length} call sheet${imported.days.length === 1 ? '' : 's'}`,
+        message: `Replace all your current days with the ${imported.days.length} imported day${imported.days.length === 1 ? '' : 's'}, or append them?`,
+        confirmLabel: 'Replace all',
+        cancelLabel: 'Append',
+      });
+      if (replace) {
         updateStore(s => { s.days = imported.days; s.currentDayId = imported.currentDayId; s.tweaks = imported.tweaks; });
       } else {
         updateStore(s => { s.days.push(...imported.days); s.currentDayId = imported.days[0].id; });
@@ -148,7 +182,7 @@ export default function App() {
     }
 
     throw new Error('Could not parse JSON. Make sure it was exported from Call Sheet.');
-  }, [updateDay, updateStore]);
+  }, [updateDay, updateStore, showConfirm]);
 
   // File-picker path (used by "Choose file" in ImportDialog and legacy CSV handler)
   const handleImportJSONFile = useCallback(() => {
@@ -166,29 +200,35 @@ export default function App() {
           try {
             const obj = JSON.parse(fr.result);
             if (isEncryptedJSON(obj)) {
-              const password = prompt('This file is encrypted. Enter the password to open it:');
+              const password = await showPasswordPrompt({
+                title: 'Encrypted file',
+                message: 'This file is password-protected. Enter the password to open it.',
+              });
               if (!password) return;
               try { await processImportText(fr.result, password); }
-              catch { alert('Wrong password or corrupted file — could not decrypt.'); }
+              catch { showAlert({ title: 'Decryption failed', message: 'Wrong password or corrupted file — could not decrypt.' }); }
               return;
             }
           } catch {}
-          alert(e.message);
+          showAlert({ title: 'Import error', message: e.message });
         }
       };
       fr.readAsText(f);
     };
     inp.click();
-  }, [processImportText]);
+  }, [processImportText, showPasswordPrompt, showAlert]);
 
   const handleExportCSV = useCallback(() => {
-    import('./utils.js').then(({ dayToCSVLines }) => {
+    import('./utils.js').then(async ({ dayToCSVLines }) => {
       let scope = 'current';
       if (store.days.length > 1) {
-        const choice = confirm(
-          `You have ${store.days.length} days.\n\nOK = Export ALL days\nCancel = Export current day only`
-        );
-        scope = choice ? 'all' : 'current';
+        const all = await showConfirm({
+          title: 'Export CSV',
+          message: `You have ${store.days.length} days. Export all of them or just the current day?`,
+          confirmLabel: 'Export all days',
+          cancelLabel: 'Current day only',
+        });
+        scope = all ? 'all' : 'current';
       }
       const lines = [];
       const daysToExport = scope === 'all' ? store.days : [currentDay];
@@ -206,7 +246,7 @@ export default function App() {
       a.download = `call-sheet-${(currentDay.meta.date || 'export').replace(/[^\w.-]/g,'_')}.csv`;
       a.click();
     });
-  }, [store.days, currentDay]);
+  }, [store.days, currentDay, showConfirm]);
 
   return (
     <EditModeContext.Provider value={editing}>
@@ -266,6 +306,8 @@ export default function App() {
           onClose={() => setImportOpen(false)}
         />
       )}
+
+      <Dialog dialog={dialog} onClose={closeDialog} />
     </EditModeContext.Provider>
   );
 }
