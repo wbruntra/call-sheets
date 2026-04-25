@@ -69,6 +69,58 @@ export default function App() {
   // Load shared data from URL hash on mount
   useEffect(() => {
     const hash = window.location.hash;
+    // Cloud link: #/c/<binId> — fetch from jsonbin, prompt for password if encrypted
+    if (hash.startsWith('#/c/')) {
+      const binId = hash.slice(3).trim();
+      if (!binId) return;
+      setSyncStatus('loading');
+      fetchBin(binId)
+        .then(json => {
+          const obj = JSON.parse(json);
+          if (isEncryptedJSON(obj)) {
+            setSyncStatus(null);
+            showPasswordPrompt({
+              title: 'Cloud call sheet',
+              message: 'This call sheet is password-protected. Enter the password to open it.',
+            }).then(password => {
+              if (!password) { window.history.replaceState(null, '', window.location.pathname); return; }
+              setSyncStatus('loading');
+              decryptDayFromJSON(json, password)
+                .then(day => {
+                  updateStore(s => { s.days = [day]; s.currentDayId = day.id; });
+                  setCloudBin(binId, password);
+                  setSyncStatus('ok');
+                  window.history.replaceState(null, '', window.location.pathname);
+                })
+                .catch(() => {
+                  showAlert({ title: 'Decryption failed', message: 'Wrong password or corrupted data.' });
+                  setSyncStatus('error');
+                  window.history.replaceState(null, '', window.location.pathname);
+                });
+            });
+            return;
+          }
+          // Unencrypted
+          const day = dayFromJSON(json);
+          if (!day) {
+            showAlert({ title: 'Import failed', message: 'Could not parse the cloud data.' });
+            setSyncStatus('error');
+            return;
+          }
+          updateStore(s => { s.days = [day]; s.currentDayId = day.id; });
+          setCloudBin(binId, '');
+          setSyncStatus('ok');
+          window.history.replaceState(null, '', window.location.pathname);
+        })
+        .catch(err => {
+          console.warn('Cloud link fetch failed:', err);
+          showAlert({ title: 'Import failed', message: err.message || 'Could not fetch cloud data.' });
+          setSyncStatus('error');
+          window.history.replaceState(null, '', window.location.pathname);
+        });
+      return;
+    }
+    // Compressed data link: #/d/<data>
     if (!hash.startsWith('#/d/')) return;
     const compressed = hash.slice(4);
     if (!compressed) return;

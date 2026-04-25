@@ -22,6 +22,7 @@ export default function ShareDialog({ currentDay, store, onClose }) {
   const [cloudError, setCloudError] = useState('');
   const [cloudBinId, setCloudBinId] = useState('');
   const [cloudCopied, setCloudCopied] = useState(false);
+  const [cloudLinkCopied, setCloudLinkCopied] = useState(false);
   const [cloudUpdateMsg, setCloudUpdateMsg] = useState('');
 
   const savedBin = getCloudBin();
@@ -39,7 +40,7 @@ export default function ShareDialog({ currentDay, store, onClose }) {
       setEncPassword(''); setEncConfirm(''); setEncError(''); setEncDone(false);
     }
     if (mode !== 'cloud') {
-      setCloudPassword(''); setCloudConfirm(''); setCloudError(''); setCloudBinId(''); setCloudCopied(false); setCloudUpdateMsg('');
+      setCloudPassword(''); setCloudConfirm(''); setCloudError(''); setCloudBinId(''); setCloudCopied(false); setCloudLinkCopied(false); setCloudUpdateMsg('');
     }
   }, [mode]);
 
@@ -278,9 +279,9 @@ export default function ShareDialog({ currentDay, store, onClose }) {
             ) : (
               <div className="cloud-result">
                 <p className="share-hint" style={{ marginBottom: 8 }}>
-                  Uploaded! Share this code with the recipient — they'll also need the password.
+                  Uploaded! Share this code or the link below — recipients with the password will auto-sync on reload.
                 </p>
-                <div className="share-url-row">
+                <div className="share-url-row" style={{ marginBottom: 8 }}>
                   <input
                     type="text"
                     readOnly
@@ -293,6 +294,21 @@ export default function ShareDialog({ currentDay, store, onClose }) {
                     onClick={() => copyToClipboard(activeBinId, setCloudCopied)}
                   >
                     {cloudCopied ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+                <div className="share-url-row">
+                  <input
+                    type="text"
+                    readOnly
+                    value={`${baseURL}#/c/${activeBinId}`}
+                    className="share-url-input"
+                    onClick={e => e.target.select()}
+                  />
+                  <button
+                    className="primary"
+                    onClick={() => copyToClipboard(`${baseURL}#/c/${activeBinId}`, setCloudLinkCopied)}
+                  >
+                    {cloudLinkCopied ? 'Copied!' : 'Copy link'}
                   </button>
                 </div>
                 {cloudUpdateMsg && <p className="share-enc-msg ok" style={{ marginTop: 12 }}>{cloudUpdateMsg}</p>}
