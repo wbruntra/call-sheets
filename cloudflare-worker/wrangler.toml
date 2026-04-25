@@ -1,0 +1,7 @@
+name = "call-sheets-backend"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+[[kv_namespaces]]
+binding = "CALLSHEETS_KV"
+id = "cac7eed07e9a4beeb9a2b1201be6504d"
